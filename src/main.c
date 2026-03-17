@@ -8,43 +8,49 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // git init command
+    // mgit init command
     if (strcmp(argv[1], "init") == 0)
     {
         return cmd_init();
     }
 
-    // git config command
+    // mgit config command
     else if (strcmp(argv[1], "config") == 0)
     {
         return cmd_config(argc, argv);
     }
 
-    // git add command
+    // mgit add command
     else if (strcmp(argv[1], "add") == 0)
     {
         return cmd_add(argc, argv);
     }
 
-    // git commit command
+    // mgit unstage command
+    else if (strcmp(argv[1], "unstage") == 0)
+    {
+        return cmd_unstage(argc, argv);
+    }
+
+    // mgit commit command
     else if (strcmp(argv[1], "commit") == 0)
     {
         return cmd_commit(argc, argv);
     }
 
-    // git log command
+    // mgit log command
     else if (strcmp(argv[1], "log") == 0)
     {
         return cmd_log();
     }
 
-    // git status command
+    // mgit status command
     else if (strcmp(argv[1], "status") == 0)
     {
         return cmd_status();
     }
 
-    // git checkout command
+    // mgit checkout command
     else if (strcmp(argv[1], "checkout") == 0)
     {
         return cmd_checkout(argc, argv);

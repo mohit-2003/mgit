@@ -7,6 +7,23 @@
 
 #define INDEX_FILE ".mgit/index"
 
+static void save_last_commit_snapshot()
+{
+    FILE *src = fopen(".mgit/index", "r");
+    FILE *dst = fopen(".mgit/last_commit_index", "w");
+
+    if (!src || !dst)
+        return;
+
+    char line[512];
+
+    while (fgets(line, sizeof(line), src))
+        fputs(line, dst);
+
+    fclose(src);
+    fclose(dst);
+}
+
 static int index_empty()
 {
     FILE *file = fopen(INDEX_FILE, "r");
@@ -63,6 +80,7 @@ int cmd_commit(int argc, char *argv[])
     }
 
     /* Clear staging area */
+    save_last_commit_snapshot();
     clear_index();
 
     printf("Committed: %s\n", commit_hash);

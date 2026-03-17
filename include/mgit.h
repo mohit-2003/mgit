@@ -10,6 +10,7 @@
 int cmd_init();
 int cmd_config(int argc, char *argv[]);
 int cmd_add(int argc, char *argv[]);
+int cmd_unstage(int argc, char *argv[]);
 int cmd_commit(int argc, char *argv[]);
 int cmd_log();
 int cmd_status();
