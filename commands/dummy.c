@@ -12,17 +12,17 @@
 //     return 0;
 // }
 
-int cmd_add(int argc, char *argv[])
-{
-    printf("add command not implemented yet\n");
-    return 0;
-}
+// int cmd_add(int argc, char *argv[])
+// {
+//     printf("add command not implemented yet\n");
+//     return 0;
+// }
 
-int cmd_commit(int argc, char *argv[])
-{
-    printf("commit command not implemented yet\n");
-    return 0;
-}
+// int cmd_commit(int argc, char *argv[])
+// {
+//     printf("commit command not implemented yet\n");
+//     return 0;
+// }
 
 int cmd_log()
 {

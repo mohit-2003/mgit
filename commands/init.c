@@ -36,7 +36,7 @@ int cmd_init()
         return 1;
     }
 
-    fprintf(head, "ref: refs/heads/main\n");
+    fprintf(head, "");
 
     fclose(head);
 
