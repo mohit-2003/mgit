@@ -30,11 +30,11 @@ int cmd_log()
     return 0;
 }
 
-int cmd_status()
-{
-    printf("status command not implemented yet\n");
-    return 0;
-}
+// int cmd_status()
+// {
+//     printf("status command not implemented yet\n");
+//      return 0;
+// }
 
 int cmd_checkout(int argc, char *argv[])
 {

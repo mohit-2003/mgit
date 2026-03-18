@@ -46,6 +46,24 @@ int add_index_entry(const char *filepath, const char hash[41])
     return 0;
 }
 
+int read_index(char paths[][256], char hashes[][41], int max)
+{
+    FILE *file = fopen(".mgit/index", "r");
+
+    if (!file)
+        return 0;
+
+    int count = 0;
+
+    while (count < max && fscanf(file, "%s %s", paths[count], hashes[count]) == 2)
+    {
+        count++;
+    }
+
+    fclose(file);
+    return count;
+}
+
 void print_index()
 {
     FILE *file = fopen(INDEX_FILE, "r");
@@ -108,4 +126,22 @@ int get_last_commit_hash(const char *filepath, char hash[41])
 
     fclose(file);
     return 0;
+}
+
+int read_last_commit(char paths[][256], char hashes[][41], int max)
+{
+    FILE *file = fopen(".mgit/last_commit_index", "r");
+
+    if (!file)
+        return 0;
+
+    int count = 0;
+
+    while (count < max && fscanf(file, "%s %s", paths[count], hashes[count]) == 2)
+    {
+        count++;
+    }
+
+    fclose(file);
+    return count;
 }
