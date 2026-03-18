@@ -24,11 +24,11 @@
 //     return 0;
 // }
 
-int cmd_log()
-{
-    printf("log command not implemented yet\n");
-    return 0;
-}
+// int cmd_log()
+// {
+//     printf("log command not implemented yet\n");
+//     return 0;
+// }
 
 // int cmd_status()
 // {
