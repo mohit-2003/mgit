@@ -1,20 +1,20 @@
 #ifndef BLOB_H
 #define BLOB_H
 
-#include <stddef.h>
+#include "constants.h"
 
 /**
- * @brief Create a blob object from a file.
+ * @brief hashes a file and writes it to the object store as a blob
  *
- * Reads the contents of a file, formats it as a Git-style blob
- * object ("blob <size>\0<data>"), computes its SHA-1 hash, and
- * stores it in the object database.
+ * reads the file, builds a git-style blob header, computes SHA-1 over
+ * the whole thing, then saves it under .mgit/objects/ if it's not there already.
  *
- * @param filepath Path to file to convert into a blob.
- * @param hash_output Buffer to store resulting SHA-1 hex string.
+ * @param filepath path to the file to turn into a blob
+ * @param hash_output output buffer that gets the hex SHA-1 hash (must be HASH_SIZE)
+ * @return 0 on success, 1 if something went wrong (file not found, malloc fail, etc.)
  *
- * @return 0 on success, non-zero on failure.
+ * @note blob format is "blob <size>\0<raw bytes>" — same as git does it
  */
-int create_blob(const char *filepath, char hash_output[41]);
+int create_blob(const char *filepath, char hash_output[HASH_SIZE]);
 
-#endif
+#endif /* BLOB_H */

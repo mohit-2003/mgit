@@ -1,76 +1,75 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 
 #include "../include/blob.h"
 #include "../include/sha1.h"
+#include "../include/utils.h"
+#include "../include/constants.h"
 
-int create_blob(const char *filepath, char hash_output[41])
+int create_blob(const char *filepath, char hash_output[HASH_SIZE])
 {
-    FILE *file = fopen(filepath, "rb");
-
-    if (!file)
+    FILE *f = fopen(filepath, "rb");
+    if (!f)
     {
-        printf("Error opening file: %s\n", filepath);
+        printf("Error: cannot open '%s'\n", filepath);
         return 1;
     }
 
-    /* Determine file size */
-    fseek(file, 0, SEEK_END);
-    long size = ftell(file);
-    rewind(file);
+    /* Read entire file into memory */
+    fseek(f, 0, SEEK_END);
+    long size = ftell(f);
+    rewind(f);
 
-    /* Read file data */
-    char *data = malloc(size);
-    fread(data, 1, size, file);
-    fclose(file);
+    unsigned char *data = malloc(size);
+    if (!data)
+    {
+        fclose(f);
+        return 1;
+    }
+    fread(data, 1, size, f);
+    fclose(f);
 
-    /* Create blob header */
+    /*
+     * Git blob format:  "blob <size>\0<raw file bytes>"
+     * The null byte is the separator between header and content.
+     */
     char header[64];
-    int header_len = sprintf(header, "blob %ld", size) + 1;
+    int hlen = sprintf(header, "blob %ld", size) + 1; /* +1 for '\0' */
 
-    int total_size = header_len + size;
+    size_t total = (size_t)hlen + (size_t)size;
+    unsigned char *store = malloc(total);
+    if (!store)
+    {
+        free(data);
+        return 1;
+    }
 
-    char *store = malloc(total_size);
-
-    memcpy(store, header, header_len);
-    memcpy(store + header_len, data, size);
-
+    // copy header first, then file bytes right after it
+    memcpy(store, header, hlen);
+    memcpy(store + hlen, data, size);
     free(data);
 
-    /* Compute SHA1 */
+    /* Compute SHA-1 over the full blob (header + content) */
     unsigned char hash_bin[20];
-    sha1((unsigned char *)store, total_size, hash_bin);
-
+    sha1(store, total, hash_bin);
     sha1_to_hex(hash_bin, hash_output);
 
-    /* Determine object path */
-    char dir[3];
-    strncpy(dir, hash_output, 2);
-    dir[2] = '\0';
+    /* Write to object store if not already there */
+    char obj_path[PATH_BUF];
+    object_path(hash_output, obj_path);
+    ensure_object_dir(hash_output); // creates the two-char subdirectory if missing
 
-    char path[512];
-    sprintf(path, ".mgit/objects/%s", dir);
-
-    mkdir(path, 0777);
-
-    sprintf(path, ".mgit/objects/%s/%s", dir, hash_output + 2);
-
-    /* Write object if not already present */
-    FILE *obj = fopen(path, "wb");
-
+    FILE *obj = fopen(obj_path, "wb");
     if (!obj)
     {
-        printf("Error writing object\n");
+        printf("Error: cannot write object for '%s'\n", filepath);
         free(store);
         return 1;
     }
-
-    fwrite(store, 1, total_size, obj);
-
+    fwrite(store, 1, total, obj);
     fclose(obj);
-    free(store);
 
+    free(store);
     return 0;
 }

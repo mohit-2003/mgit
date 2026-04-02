@@ -1,89 +1,51 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../include/commit_cmd.h"
-#include "../include/tree.h"
 #include "../include/commit.h"
-
-#define INDEX_FILE ".mgit/index"
-
-static void save_last_commit_snapshot()
-{
-    FILE *src = fopen(".mgit/index", "r");
-    FILE *dst = fopen(".mgit/last_commit_index", "w");
-
-    if (!src || !dst)
-        return;
-
-    char line[512];
-
-    while (fgets(line, sizeof(line), src))
-        fputs(line, dst);
-
-    fclose(src);
-    fclose(dst);
-}
-
-static int index_empty()
-{
-    FILE *file = fopen(INDEX_FILE, "r");
-
-    if (!file)
-        return 1;
-
-    int c = fgetc(file);
-
-    fclose(file);
-
-    return (c == EOF);
-}
-
-static void clear_index()
-{
-    FILE *file = fopen(INDEX_FILE, "w");
-
-    if (file)
-        fclose(file);
-}
+#include "../include/tree.h"
+#include "../include/utils.h"
+#include "../include/constants.h"
+#include "../include/index.h"
+#include "../include/mgit.h"
 
 int cmd_commit(int argc, char *argv[])
 {
-    if (argc < 3)
+    const char *message = NULL;
+
+    if (argc >= 4 && strcmp(argv[2], "-m") == 0)
+        message = argv[3];
+    else if (argc >= 3 && argv[2][0] != '-')
+        message = argv[2];
+    else
     {
-        printf("Usage: mgit commit \"message\"\n");
-        return 1;
+        printf("usage: mgit commit \"message\"\n");
+        return 0; /* wrong usage — not a failure, don't set error exit */
     }
 
-    if (index_empty())
+    if (index_is_empty())
     {
-        printf("Nothing to commit\n");
-        return 1;
+        printf("no changes added to commit (use \"git add\" and/or \"git commit\")\n");
+        return 0;
     }
 
-    const char *message = argv[2];
+    char tree_hash[HASH_SIZE];
+    char commit_hash[HASH_SIZE];
 
-    char tree_hash[41];
-    char commit_hash[41];
-
-    /* Create tree from index */
     if (create_tree(tree_hash) != 0)
     {
-        printf("Failed to create tree\n");
-        return 1;
+        printf("error: failed to create tree.\n");
+        return 1; /* genuine internal error */
     }
 
-    /* Create commit object */
     if (create_commit(tree_hash, message, commit_hash) != 0)
     {
-        printf("Commit failed\n");
-        return 1;
+        printf("error: commit failed.\n");
+        return 1; /* genuine internal error */
     }
 
-    /* Clear staging area */
-    save_last_commit_snapshot();
     clear_index();
+    rebuild_last_commit_index();
 
-    printf("Committed: %s\n", commit_hash);
-
+    printf("committed: %s\n", commit_hash);
     return 0;
 }

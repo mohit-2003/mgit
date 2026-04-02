@@ -1,20 +1,18 @@
 #ifndef COMMIT_H
 #define COMMIT_H
 
+#include "constants.h"
+
 /**
- * @brief Create a commit object.
+ * @brief builds a commit object from a tree hash and message, writes it, and updates HEAD
  *
- * Builds the commit structure, hashes it, and stores it in the
- * object database.
- *
- * @param tree_hash SHA1 hash of the root tree
- * @param message commit message
- * @param commit_hash output buffer for resulting commit hash
- *
- * @return 0 on success
+ * @param tree_hash    SHA-1 hash of the tree object for this commit
+ * @param message      commit message string
+ * @param commit_hash  output buffer for the resulting 40-char hex hash (must be HASH_SIZE)
+ * @return 0 on success, 1 on failure
  */
 int create_commit(const char *tree_hash,
                   const char *message,
-                  char commit_hash[41]);
+                  char commit_hash[HASH_SIZE]);
 
 #endif

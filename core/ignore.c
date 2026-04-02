@@ -1,28 +1,29 @@
 #include <stdio.h>
 #include <string.h>
+
 #include "../include/ignore.h"
+#include "../include/constants.h"
+#include "../include/utils.h"
 
-#define IGNORE_FILE ".mgitignore"
-
+// TODO: implement proper glob pattern matching instead of simple substring match
 int is_ignored(const char *filepath)
 {
-    FILE *file = fopen(IGNORE_FILE, "r");
-    if (!file)
+    FILE *f = fopen(IGNORE_FILE, "r");
+    if (!f)
         return 0;
 
-    char pattern[256];
+    char pattern[PATH_BUF];
     int ignored = 0;
 
-    while (fgets(pattern, sizeof(pattern), file))
+    while (fgets(pattern, sizeof(pattern), f))
     {
-        // Remove newline
-        pattern[strcspn(pattern, "\r\n")] = 0;
+        strip_newline(pattern);
 
-        if (strlen(pattern) == 0 || pattern[0] == '#')
+        /* Skip empty lines and comments */
+        if (pattern[0] == '\0' || pattern[0] == '#')
             continue;
 
-        // Simple match: if the path starts with the pattern
-        // or contains it as a folder segment (e.g., "node_modules/")
+        /* Simple substring match: if the path contains the pattern */
         if (strstr(filepath, pattern) != NULL)
         {
             ignored = 1;
@@ -30,6 +31,6 @@ int is_ignored(const char *filepath)
         }
     }
 
-    fclose(file);
+    fclose(f);
     return ignored;
 }

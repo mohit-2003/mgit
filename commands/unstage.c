@@ -1,24 +1,26 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../include/unstage.h"
+#include "../include/mgit.h"
+#include "../include/constants.h"
 
-#define INDEX_FILE ".mgit/index"
-
-/* Clear entire staging area */
-static int unstage_all()
+/**
+ * @brief clears the entire staging area
+ *
+ * just truncates the index file to zero. all staged files are dropped.
+ *
+ * @return 0 on success, 1 if the index file couldn't be opened
+ */
+static int unstage_all(void)
 {
-    FILE *file = fopen(INDEX_FILE, "w");
-
-    if (!file)
+    FILE *f = fopen(INDEX_FILE, "w");
+    if (!f)
     {
-        printf("Error clearing index\n");
+        printf("Error: cannot clear index.\n");
         return 1;
     }
-
-    fclose(file);
-
-    printf("Cleared staging area\n");
+    fclose(f);
+    printf("Staging area cleared.\n");
     return 0;
 }
 
@@ -30,58 +32,47 @@ int cmd_unstage(int argc, char *argv[])
         return 1;
     }
 
-    /* Handle: mgit unstage . */
     if (strcmp(argv[2], ".") == 0)
-    {
         return unstage_all();
-    }
 
     const char *target = argv[2];
 
-    FILE *file = fopen(INDEX_FILE, "r");
-
-    if (!file)
+    FILE *src = fopen(INDEX_FILE, "r");
+    if (!src)
     {
-        printf("Index is empty\n");
+        printf("Staging area is already empty.\n");
         return 1;
     }
 
-    FILE *temp = fopen(".mgit/index_tmp", "w");
-
-    if (!temp)
+    FILE *tmp = fopen(TMP_INDEX, "w");
+    if (!tmp)
     {
-        printf("Error creating temp index\n");
-        fclose(file);
+        fclose(src);
+        printf("Error: cannot create temp file.\n");
         return 1;
     }
 
-    char path[256];
-    char hash[41];
-
+    char path[PATH_BUF], hash[HASH_SIZE];
     int found = 0;
 
-    while (fscanf(file, "%s %s", path, hash) == 2)
+    while (fscanf(src, "%1023s %40s", path, hash) == 2)
     {
-        if (strcmp(path, target) != 0)
-        {
-            fprintf(temp, "%s %s\n", path, hash);
-        }
-        else
-        {
+        if (strcmp(path, target) == 0)
             found = 1;
-        }
+        else
+            fprintf(tmp, "%s %s\n", path, hash);
     }
 
-    fclose(file);
-    fclose(temp);
+    fclose(src);
+    fclose(tmp);
 
     remove(INDEX_FILE);
-    rename(".mgit/index_tmp", INDEX_FILE);
+    rename(TMP_INDEX, INDEX_FILE);
 
     if (found)
-        printf("Removed %s from staging\n", target);
+        printf("Unstaged: %s\n", target);
     else
-        printf("%s not found in staging\n", target);
+        printf("'%s' was not in the staging area.\n", target);
 
     return 0;
 }

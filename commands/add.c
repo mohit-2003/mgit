@@ -2,15 +2,26 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#include "../include/add.h"
+
+#include "../include/mgit.h"
 #include "../include/blob.h"
 #include "../include/index.h"
 #include "../include/ignore.h"
-#include "../utils/dirent.h"
+#include "../include/utils.h"
+#include "../include/constants.h"
 
-// Forward declaration
-static void process_path(const char *path);
+#include "../include/dirent.h"
 
+static void process_path(const char *fpath);
+
+/**
+ * @brief walks a directory and stages all files inside it
+ *
+ * opens the dir at base_path and calls process_path() on every entry.
+ * skips "." and ".." so we don't loop forever.
+ *
+ * @param base_path path to the directory we want to add
+ */
 static void add_directory(const char *base_path)
 {
     DIR *dir = opendir(base_path);
@@ -20,76 +31,90 @@ static void add_directory(const char *base_path)
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL)
     {
-        // Skip "." and ".."
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+        // skip current and parent dir entries
+        if (strcmp(entry->d_name, ".") == 0 ||
+            strcmp(entry->d_name, "..") == 0)
             continue;
 
-        char path[1024];
-        // Clean path construction to avoid "//"
+        char childpath[PATH_BUF];
+        // avoid "./filename when base is "."
         if (strcmp(base_path, ".") == 0)
-        {
-            snprintf(path, sizeof(path), "%s", entry->d_name);
-        }
+            snprintf(childpath, sizeof(childpath), "%s", entry->d_name);
         else
-        {
-            snprintf(path, sizeof(path), "%s/%s", base_path, entry->d_name);
-        }
+            snprintf(childpath, sizeof(childpath), "%s/%s", base_path, entry->d_name);
 
-        process_path(path);
+        process_path(childpath);
     }
     closedir(dir);
 }
 
-static void process_path(const char *path)
+/**
+ * @brief decides what to do with a path - recurse if dir, stage if file
+ *
+ * skips anything inside .mgit/ or matched by .mgitignore.
+ * for regular files, hashes the content and adds to index only if
+ * something actually changed (checks both index and last commit).
+ *
+ * @param fpath path to the file or directory to process
+ */
+static void process_path(const char *fpath)
 {
-    // 1. Check if it's ignored or the internal .mgit folder
-    if (is_ignored(path) || strstr(path, ".mgit") != NULL)
+    // Skip .mgit folder and ignored files
+    if (strncmp(fpath, ".mgit/", 6) == 0)
+        return;
+    if (is_ignored(fpath))
+        return;
+
+    if (is_directory(fpath))
     {
+        add_directory(fpath);
         return;
     }
 
-    struct stat st;
-    if (stat(path, &st) != 0)
+    if (!is_regular_file(fpath))
         return;
 
-    // 2. If it's a directory, recurse
-    if (S_ISDIR(st.st_mode))
-    {
-        add_directory(path);
-    }
-    // 3. If it's a file, stage it
-    else if (S_ISREG(st.st_mode))
-    {
-        char hash[41];
-        if (create_blob(path, hash) != 0)
-            return;
+    /** create_blob() writes the object to disk and gives the hash */
+    char hash[HASH_SIZE];
+    if (create_blob(fpath, hash) != 0)
+        return;
 
-        char old_hash[41];
-        // Only add to index if it's new or changed
-        if (get_index_hash(path, old_hash) && strcmp(old_hash, hash) == 0)
-        {
-            return;
-        }
+    char old_hash[HASH_SIZE];
 
-        add_index_entry(path, hash);
-        printf("added: %s\n", path);
-    }
+    // skip if already staged with the same content
+    if (get_index_hash(fpath, old_hash) && strcmp(old_hash, hash) == 0)
+        return;
+
+    // also skip if it matches what's already in the last commit
+    if (get_last_commit_hash(fpath, old_hash) && strcmp(old_hash, hash) == 0)
+        return;
+
+    add_index_entry(fpath, hash);
+    printf("added: %s\n", fpath);
 }
 
 int cmd_add(int argc, char *argv[])
 {
     if (argc < 3)
     {
-        printf("Usage: mgit add <file1> [dir/file2] ...\n");
+        printf("Usage: mgit add <path> [path2 ...]\n");
         return 1;
     }
 
     for (int i = 2; i < argc; i++)
     {
+        // "." means stage everything in the current directory
+        if (strcmp(argv[i], ".") == 0)
+        {
+            add_directory(".");
+            continue;
+        }
+
+        // check the path exists before doing anything with it
         struct stat st;
         if (stat(argv[i], &st) != 0)
         {
-            printf("fatal: pathspec '%s' did not match any files\n", argv[i]);
+            printf("fatal: '%s' did not match any files\n", argv[i]);
             continue;
         }
         process_path(argv[i]);

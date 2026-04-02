@@ -1,113 +1,100 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../include/mgit.h"
 
-#define CONFIG_FILE ".mgitconfig"
+#include "../include/mgit.h"
+#include "../include/constants.h"
 
 int cmd_config(int argc, char *argv[])
 {
-    // Show error if no subcommand is provided
     if (argc < 4)
     {
         printf("Usage:\n");
-        printf("mgit config --global --name \"Your Name\"\n");
-        printf("mgit config --global --email \"your@email.com\"\n");
-        printf("mgit config --global --list\n");
+        printf("  mgit config --global --name  \"Your Name\"\n");
+        printf("  mgit config --global --email \"you@example.com\"\n");
+        printf("  mgit config --global --list\n");
         return 1;
     }
 
     if (strcmp(argv[2], "--global") != 0)
     {
-        printf("Only --global config supported\n");
+        printf("Only --global config is supported.\n");
         return 1;
     }
 
-    // Get home directory -> C:/Users/Username
+    /* Locate home directory (works on Windows and Linux) */
     char *home = getenv("HOME");
-    if (home == NULL)
+    if (!home)
         home = getenv("USERPROFILE");
-
-    if (home == NULL)
+    if (!home)
     {
-        printf("Cannot determine home directory\n");
+        printf("Error: cannot determine home directory.\n");
         return 1;
     }
 
-    // Construct path to config file -> C:/Users/Username/.mgitconfig
-    char path[512];
-    sprintf(path, "%s/%s", home, CONFIG_FILE);
+    char path[PATH_BUF];
+    snprintf(path, sizeof(path), "%s/%s", home, CONFIG_FILE);
 
+    /* Read existing name/email if the file already exists */
     char name[256] = "";
     char email[256] = "";
 
-    // Read existing config if it exists
-    FILE *file = fopen(path, "r");
-
-    if (file != NULL)
+    FILE *f = fopen(path, "r");
+    if (f)
     {
-        char line[256];
-        // Parse config file for existing name and email
-        while (fgets(line, sizeof(line), file))
+        char line[LINE_BUF];
+        while (fgets(line, sizeof(line), f))
         {
             if (strncmp(line, "name =", 6) == 0)
                 sscanf(line, "name = %[^\n]", name);
-
             if (strncmp(line, "email =", 7) == 0)
                 sscanf(line, "email = %[^\n]", email);
         }
-
-        fclose(file);
+        fclose(f);
     }
 
-    // Handle --list option to display current config
+    /* --list: just print current values */
     if (strcmp(argv[3], "--list") == 0)
     {
-        if (strlen(name) == 0 && strlen(email) == 0)
-        {
+        if (name[0] == '\0' && email[0] == '\0')
             printf("No config set.\n");
-            return 0;
+        else
+        {
+            printf("name  = %s\n", name);
+            printf("email = %s\n", email);
         }
-
-        printf("name = %s\n", name);
-        printf("email = %s\n", email);
         return 0;
     }
 
-    // For --name and --email options, ensure value is provided
+    /* --name / --email: require a value argument */
     if (argc < 5)
     {
-        printf("Missing value for config option\n");
+        printf("Error: missing value for config option.\n");
         return 1;
     }
 
-    // Update config based on command line arguments
     if (strcmp(argv[3], "--name") == 0)
-        strcpy(name, argv[4]);
+        strncpy(name, argv[4], sizeof(name) - 1);
     else if (strcmp(argv[3], "--email") == 0)
-        strcpy(email, argv[4]);
+        strncpy(email, argv[4], sizeof(email) - 1);
     else
     {
-        printf("Unknown config option\n");
+        printf("Unknown config option: %s\n", argv[3]);
         return 1;
     }
 
-    // Write updated config back to file
-    file = fopen(path, "w");
-
-    if (file == NULL)
+    /* Write updated config back */
+    f = fopen(path, "w");
+    if (!f)
     {
-        printf("Error writing config file\n");
+        printf("Error: cannot write config file.\n");
         return 1;
     }
+    fprintf(f, "[user]\n");
+    fprintf(f, "name = %s\n", name);
+    fprintf(f, "email = %s\n", email);
+    fclose(f);
 
-    fprintf(file, "[user]\n");
-    fprintf(file, "name = %s\n", name);
-    fprintf(file, "email = %s\n", email);
-
-    fclose(file);
-
-    printf("Config updated successfully\n");
-
+    printf("Config updated.\n");
     return 0;
 }
