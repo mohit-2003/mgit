@@ -87,7 +87,30 @@ int cmd_log(void);
  */
 int cmd_status(void);
 
+/**
+ * @brief entry point for the "mgit checkout" command
+ *
+ * handles branch switching, detached HEAD checkout, and new branch creation
+ * with -b. aborts if there are uncommitted local changes that would be overwritten.
+ *
+ * @param argc argument count from the command dispatcher
+ * @param argv argument vector — argv[2] is [-b] and argv[3] is the branch/commit target
+ * @return 0 on success, 1 on bad usage, conflicts, or missing refs
+ *
+ * @note aborts if any staged file differs on disk — matches git's "would be overwritten" check
+ * @note after switching, LAST_INDEX_FILE is synced from the new index so status stays correct
+ */
 int cmd_checkout(int argc, char *argv[]);
+
+/**
+ * @brief entry point for the "mgit branch" command
+ *
+ * dispatches to list, create, delete, or rename based on argc and flags.
+ *
+ * @param argc argument count from the command dispatcher
+ * @param argv argument vector — argv[2] onward are flags and branch names
+ * @return 0 on success, 1 on bad usage or operation failure
+ */
 int cmd_branch(int argc, char *argv[]);
 
 #endif
