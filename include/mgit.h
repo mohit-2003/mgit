@@ -113,4 +113,16 @@ int cmd_checkout(int argc, char *argv[]);
  */
 int cmd_branch(int argc, char *argv[]);
 
+/**
+ * @brief entry point for the "mgit help" command
+ *
+ * displays detailed help information and usage instructions
+ * for a specific mgit command.
+ *
+ * @param argc argument count from the command dispatcher
+ * @param argv argument vector — argv[2] is the command name to explain
+ * @return 0 on success, 1 on missing or unknown command
+ */
+int cmd_help(int argc, char *argv[]);
+
 #endif

@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <string.h>
 #include "../include/mgit.h"
 #include "../include/utils.h"
 
@@ -12,8 +14,11 @@ int main(int argc, char *argv[])
 
     const char *cmd = argv[1];
 
+    // Commands that do not require an active .mgit repository
     if (strcmp(cmd, "init") == 0)
         return cmd_init();
+    else if (strcmp(cmd, "help") == 0)
+        return cmd_help(argc, argv);
 
     // All other commands require a .mgit repository to be present.
     if (!is_mgit_repository())
