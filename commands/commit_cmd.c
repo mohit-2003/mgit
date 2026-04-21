@@ -19,7 +19,7 @@ int cmd_commit(int argc, char *argv[])
     else
     {
         printf("usage: mgit commit \"message\"\n");
-        return 0; /* wrong usage — not a failure, don't set error exit */
+        return 0;
     }
 
     if (index_is_empty())
@@ -34,17 +34,30 @@ int cmd_commit(int argc, char *argv[])
     if (create_tree(tree_hash) != 0)
     {
         printf("error: failed to create tree.\n");
-        return 1; /* genuine internal error */
+        return 1;
     }
 
     if (create_commit(tree_hash, message, commit_hash) != 0)
     {
         printf("error: commit failed.\n");
-        return 1; /* genuine internal error */
+        return 1;
     }
 
-    clear_index();
     rebuild_last_commit_index();
+
+    /* Repopulate index with committed files so unstaged changes are detectable */
+    FILE *src = fopen(LAST_INDEX_FILE, "r");
+    FILE *dst = fopen(INDEX_FILE, "w");
+    if (src && dst)
+    {
+        char buf[PATH_BUF + HASH_SIZE];
+        while (fgets(buf, sizeof(buf), src))
+            fputs(buf, dst);
+    }
+    if (src)
+        fclose(src);
+    if (dst)
+        fclose(dst);
 
     printf("committed: %s\n", commit_hash);
     return 0;

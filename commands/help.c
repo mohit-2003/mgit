@@ -62,6 +62,12 @@ int cmd_help(int argc, char *argv[])
         printf("mgit branch [-d|-m] <branch_name>\n");
         printf("  Lists, creates, deletes, or renames branches.\n");
     }
+    else if (strcmp(target, "restore") == 0)
+    {
+        printf("mgit restore <file | .>\n");
+        printf("  Restores a deleted or modified file back to its last committed state.\n");
+        printf("  Use '.' to restore all tracked files.\n");
+    }
     else if (strcmp(target, "help") == 0)
     {
         printf("mgit help <command>\n");

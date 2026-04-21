@@ -87,4 +87,19 @@ int index_is_empty(void);
  */
 void clear_index(void);
 
+/**
+ * @brief removes a file entry from the index
+ *
+ * @param filepath  path of the file to remove
+ * @return 0 on success, 1 on failure
+ */
+int remove_index_entry(const char *filepath);
+
+/**
+ * @brief removes a file entry from the index (stages a deletion)
+ *
+ * @param filepath  path of the file to remove from the staging area
+ */
+void remove_from_index(const char *filepath);
+
 #endif

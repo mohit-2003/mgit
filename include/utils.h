@@ -68,4 +68,26 @@ void ensure_object_dir(const char *hash);
  */
 int is_mgit_repository();
 
+/**
+ * @brief creates any missing parent directories for a file path
+ *
+ * walks the path string and calls mgit_mkdir() on each directory component.
+ * needed before writing a checked-out file that lives in a subdirectory.
+ *
+ * @param filepath  file path whose parent directories should exist
+ */
+void ensure_parent_dirs(const char *filepath);
+
+/**
+ * @brief restores a single file from the object store to disk
+ *
+ * opens the blob object, skips the "blob <size>\0" header, then writes
+ * the raw content to the destination path.
+ *
+ * @param filepath   destination path to write the file to
+ * @param blob_hash  hash of the blob object to restore
+ * @return 1 on success, 0 if the object or output file couldn't be opened
+ */
+int checkout_file(const char *filepath, const char *blob_hash);
+
 #endif /* UTILS_H */

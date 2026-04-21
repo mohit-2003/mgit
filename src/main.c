@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
     if (argc < 2)
     {
         printf("mgit: a command is required.\n");
-        printf("commands: init, config, add, unstage, commit, log, status, checkout\n");
+        printf("commands: init, config, add, unstage, commit, log, status, checkout, branch, restore, help\n");
         return 0;
     }
 
@@ -43,6 +43,8 @@ int main(int argc, char *argv[])
         return cmd_checkout(argc, argv);
     else if (strcmp(cmd, "branch") == 0)
         return cmd_branch(argc, argv);
+    else if (strcmp(cmd, "restore") == 0)
+        return cmd_restore(argc, argv);
     else
     {
         printf("mgit: unknown command '%s'\n", cmd);

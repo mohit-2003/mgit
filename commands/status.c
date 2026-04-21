@@ -143,6 +143,15 @@ int cmd_status()
             any_staged = 1;
         }
     }
+    /* file in last commit, missing from index, AND missing from disk = staged deletion */
+    for (int i = 0; i < commit_count; i++)
+    {
+        if (find_in(index_paths, index_count, commit_paths[i]) == -1 && !is_regular_file(commit_paths[i]))
+        {
+            printf("    deleted:   %s\n", commit_paths[i]);
+            any_staged = 1;
+        }
+    }
     if (!any_staged)
         printf("    (nothing staged)\n");
 
@@ -154,8 +163,13 @@ int cmd_status()
     {
         const char *path = commit_paths[i];
 
-        /* Already staged with a new hash — don't double-report */
         int staged_idx = find_in(index_paths, index_count, path);
+
+        /* Missing from index AND missing from disk = already staged for deletion, skip */
+        if (staged_idx == -1 && !is_regular_file(path))
+            continue;
+
+        /* Already staged with a new hash — don't double-report */
         if (staged_idx != -1 &&
             strcmp(index_hashes[staged_idx], commit_hashes[i]) != 0)
             continue;
@@ -180,7 +194,7 @@ int cmd_status()
     if (!any_modified)
         printf("    (nothing modified)\n");
 
-    /* 3. Untracked files  */
+    /* 3. Untracked files */
     printf("\nUntracked files:\n");
     printf("  (use \"git add <file>...\" to include in what will be committed)\n");
     wt_count = 0;

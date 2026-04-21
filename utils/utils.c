@@ -71,3 +71,56 @@ int is_mgit_repository()
     }
     return 0;
 }
+
+void ensure_parent_dirs(const char *filepath)
+{
+    char temp[PATH_BUF];
+    strncpy(temp, filepath, sizeof(temp) - 1);
+    temp[sizeof(temp) - 1] = '\0';
+
+    char *p = temp;
+    while (*p)
+    {
+        if (*p == '/' || *p == '\\')
+        {
+            *p = '\0';
+            mgit_mkdir(temp);
+            *p = '/';
+        }
+        p++;
+    }
+}
+
+int checkout_file(const char *filepath, const char *blob_hash)
+{
+    char obj_path[PATH_BUF];
+    object_path(blob_hash, obj_path);
+    FILE *in = fopen(obj_path, "rb");
+    if (!in)
+        return 0;
+
+    // skip past the binary header to get to the raw file content
+    int c;
+    while ((c = fgetc(in)) != EOF && c != '\0')
+        ;
+
+    ensure_parent_dirs(filepath);
+
+    FILE *out = fopen(filepath, "wb");
+    if (!out)
+    {
+        fclose(in);
+        return 0;
+    }
+
+    char buffer[CONTENT_BUF];
+    size_t bytes;
+    while ((bytes = fread(buffer, 1, sizeof(buffer), in)) > 0)
+    {
+        fwrite(buffer, 1, bytes, out);
+    }
+
+    fclose(in);
+    fclose(out);
+    return 1;
+}

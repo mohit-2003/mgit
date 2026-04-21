@@ -125,4 +125,16 @@ int cmd_branch(int argc, char *argv[]);
  */
 int cmd_help(int argc, char *argv[]);
 
+/**
+ * @brief entry point for the "mgit restore" command
+ *
+ * recovers a deleted or modified file from the last commit back to disk.
+ * also restores the file in the index so status shows clean.
+ *
+ * @param argc argument count
+ * @param argv argv[2] is the file to restore
+ * @return 0 on success, 1 on failure
+ */
+int cmd_restore(int argc, char *argv[]);
+
 #endif

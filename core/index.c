@@ -16,7 +16,7 @@
  * @param hash  output buffer for the 40-char hex hash
  * @return 1 on success, 0 if the line is too short or malformed
  */
-static int extract_path_and_hash(char *line, char *path, char *hash)
+int extract_path_and_hash(char *line, char *path, char *hash)
 {
     // Step 1: Remove the newline character at the end of the line
     int len = strlen(line);
@@ -309,14 +309,91 @@ void rebuild_last_commit_index(void)
     fclose(out);
 }
 
+int remove_index_entry(const char *filepath)
+{
+    FILE *src = fopen(INDEX_FILE, "r");
+    if (!src)
+        return 0; // Nothing to remove
+
+    FILE *tmp = fopen(".mgit/index_tmp", "w");
+    if (!tmp)
+    {
+        fclose(src);
+        return 1;
+    }
+
+    int found = 0;
+    char line[PATH_BUF + HASH_SIZE];
+    char p[PATH_BUF], h[HASH_SIZE];
+
+    // Read through the index, copy everything EXCEPT the target file
+    while (fgets(line, sizeof(line), src))
+    {
+        if (extract_path_and_hash(line, p, h))
+        {
+            if (strcmp(p, filepath) == 0)
+            {
+                found = 1; // Skip writing this to tmp file (effectively removing it)
+            }
+            else
+            {
+                fprintf(tmp, "%s %s\n", p, h);
+            }
+        }
+    }
+
+    fclose(src);
+    fclose(tmp);
+
+    remove(INDEX_FILE);
+    rename(".mgit/index_tmp", INDEX_FILE);
+    return found ? 0 : 1;
+}
+
+void remove_from_index(const char *filepath)
+{
+    FILE *src = fopen(INDEX_FILE, "r");
+    FILE *tmp = fopen(TMP_INDEX, "w");
+    if (!tmp)
+    {
+        if (src)
+            fclose(src);
+        return;
+    }
+
+    if (src)
+    {
+        char line[PATH_BUF + HASH_SIZE];
+        char p[PATH_BUF], h[HASH_SIZE];
+        while (fgets(line, sizeof(line), src))
+        {
+            if (extract_path_and_hash(line, p, h))
+            {
+                if (strcmp(p, filepath) != 0)
+                    fprintf(tmp, "%s %s\n", p, h);
+            }
+        }
+        fclose(src);
+    }
+
+    fclose(tmp);
+    remove(INDEX_FILE);
+    rename(TMP_INDEX, INDEX_FILE);
+}
+
 int index_is_empty(void)
 {
-    FILE *f = fopen(INDEX_FILE, "r");
-    if (!f)
+    char dummy_path[1][PATH_BUF];
+    char dummy_hash[1][HASH_SIZE];
+
+    // Attempt to read at least 1 valid entry.
+    // If it returns 0, the index has no valid staged changes.
+    if (read_index(dummy_path, dummy_hash, 1) == 0)
+    {
         return 1;
-    int c = fgetc(f);
-    fclose(f);
-    return (c == EOF);
+    }
+
+    return 0;
 }
 
 void clear_index(void)
