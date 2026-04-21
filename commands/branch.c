@@ -85,8 +85,11 @@ static int list_branches()
 {
     char commit_hash[HASH_SIZE];
     char current_branch[PATH_BUF];
+
+    // Resolve what HEAD currently points to (branch name or detached hash)
     get_current_head_info(commit_hash, current_branch);
 
+    // Open the directory where branch reference files are stored
     DIR *dir = opendir(HEADS_DIR);
     if (!dir)
     {
@@ -96,29 +99,45 @@ static int list_branches()
 
     struct dirent *entry;
     int has_branches = 0;
+    int found_current = 0;
 
+    // Iterate through all files in the refs/heads directory
     while ((entry = readdir(dir)) != NULL)
     {
+        // Skip current (.) and parent (..) directory markers
         if (entry->d_name[0] == '.')
             continue;
 
         has_branches = 1;
+
+        // Highlight the currently active branch in green with an asterisk
         if (strcmp(entry->d_name, current_branch) == 0)
         {
             printf("* \033[32m%s\033[0m\n", entry->d_name);
+            found_current = 1;
         }
         else
         {
+            // Print inactive branches with standard formatting
             printf("  %s\n", entry->d_name);
         }
     }
     closedir(dir);
 
+    // Handle unborn branches (initialized repository with no commits yet)
+    if (!found_current && current_branch[0] != '\0' && strcmp(current_branch, "HEAD (detached)") != 0)
+    {
+        printf("* \033[32m%s\033[0m\n", current_branch);
+        has_branches = 1;
+    }
+
+    // Inform the user if the repository is completely empty
     if (!has_branches)
     {
         printf("No branches found.\n");
     }
 
+    // Append a red warning if the user is not on any branch
     if (strcmp(current_branch, "HEAD (detached)") == 0)
     {
         printf("* \033[31m(HEAD detached at %s)\033[0m\n", commit_hash);
