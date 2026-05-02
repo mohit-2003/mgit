@@ -15,9 +15,9 @@
 
 /* Buffer sizes  */
 #define HASH_SIZE 41     /* 40 hex chars + null terminator   */
-#define PATH_BUF 1024    /* general file path buffer          */
-#define LINE_BUF 512     /* one line from a file              */
-#define CONTENT_BUF 4096 /* commit/tree content               */
-#define MAX_FILES 1000   /* max entries in index              */
+#define PATH_BUF 1024    /* general file path buffer */
+#define LINE_BUF 512     /* one line from a file */
+#define CONTENT_BUF 4096 /* commit/tree content */
+#define MAX_FILES 1000   /* max entries in index */
 
 #endif

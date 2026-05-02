@@ -22,10 +22,8 @@ int cmd_config(int argc, char *argv[])
         return 1;
     }
 
-    /* Locate home directory (works on Windows and Linux) */
-    char *home = getenv("HOME");
-    if (!home)
-        home = getenv("USERPROFILE");
+    /* Locate home directory */
+    char *home = getHomeDirectory();
     if (!home)
     {
         printf("Error: cannot determine home directory.\n");

@@ -15,9 +15,7 @@
  */
 static void read_config(char *name, char *email)
 {
-    char *home = getenv("HOME");
-    if (!home)
-        home = getenv("USERPROFILE"); /* Windows fallback */
+    char *home = getHomeDirectory();
     if (!home)
         return;
 

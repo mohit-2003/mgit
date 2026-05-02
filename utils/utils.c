@@ -124,3 +124,12 @@ int checkout_file(const char *filepath, const char *blob_hash)
     fclose(out);
     return 1;
 }
+
+char *getHomeDirectory()
+{
+    char *home = getenv("HOME");
+    if (!home)
+        home = getenv("USERPROFILE");
+
+    return home;
+}

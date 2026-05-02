@@ -24,7 +24,7 @@ int cmd_commit(int argc, char *argv[])
 
     if (index_is_empty())
     {
-        printf("no changes added to commit (use \"git add\" and/or \"git commit\")\n");
+        printf("no changes added to commit (use \"mgit add\" and/or \"mgit commit\")\n");
         return 0;
     }
 

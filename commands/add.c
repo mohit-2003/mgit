@@ -39,8 +39,10 @@ static void add_directory(const char *base_path)
         char childpath[PATH_BUF];
         // avoid "./filename when base is "."
         if (strcmp(base_path, ".") == 0)
+            // childpath is just the filename, no leading "./"
             snprintf(childpath, sizeof(childpath), "%s", entry->d_name);
         else
+            // childpath is base_path + "/" + filename
             snprintf(childpath, sizeof(childpath), "%s/%s", base_path, entry->d_name);
 
         process_path(childpath);

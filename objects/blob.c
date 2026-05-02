@@ -17,9 +17,9 @@ int create_blob(const char *filepath, char hash_output[HASH_SIZE])
     }
 
     /* Read entire file into memory */
-    fseek(f, 0, SEEK_END);
-    long size = ftell(f);
-    rewind(f);
+    fseek(f, 0, SEEK_END); // moves the file pointer to the end of the file
+    long size = ftell(f);  // returns the current file pointer position, which is the size of the file in bytes
+    rewind(f);             // resets the file pointer back to the beginning of the file for subsequent reading
 
     unsigned char *data = malloc(size);
     if (!data)
@@ -35,7 +35,7 @@ int create_blob(const char *filepath, char hash_output[HASH_SIZE])
      * The null byte is the separator between header and content.
      */
     char header[64];
-    int hlen = sprintf(header, "blob %ld", size) + 1; /* +1 for '\0' */
+    int hlen = sprintf(header, "blob %ld", size) + 1; // +1 for '\0'
 
     size_t total = (size_t)hlen + (size_t)size;
     unsigned char *store = malloc(total);

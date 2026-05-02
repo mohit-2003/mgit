@@ -17,13 +17,14 @@ int is_ignored(const char *filepath)
 
     while (fgets(pattern, sizeof(pattern), f))
     {
+        // remove trailing newline for easier matching
         strip_newline(pattern);
 
         /* Skip empty lines and comments */
         if (pattern[0] == '\0' || pattern[0] == '#')
             continue;
 
-        /* Simple substring match: if the path contains the pattern */
+        // Simple substring match: if the path contains the pattern
         if (strstr(filepath, pattern) != NULL)
         {
             ignored = 1;

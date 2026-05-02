@@ -90,4 +90,10 @@ void ensure_parent_dirs(const char *filepath);
  */
 int checkout_file(const char *filepath, const char *blob_hash);
 
+/**
+ * @brief gets the user's home directory from environment variables
+ * @return pointer to the home directory path, or NULL if it cannot be determined
+ */
+char *getHomeDirectory();
+
 #endif /* UTILS_H */

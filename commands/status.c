@@ -127,7 +127,7 @@ int cmd_status()
 
     /* 1. Staged changes */
     printf("Changes to be committed:\n");
-    printf("  (use \"git unstage <file>...\" to unstage)\n");
+    printf("  (use \"mgit unstage <file>...\" to unstage)\n");
     int any_staged = 0;
     for (int i = 0; i < index_count; i++)
     {
@@ -157,7 +157,7 @@ int cmd_status()
 
     /* 2. Not staged (disk vs last commit) */
     printf("\nChanges not staged for commit:\n");
-    printf("  (use \"git add <file>...\" to update what will be committed)\n");
+    printf("  (use \"mgit add <file>...\" to update what will be committed)\n");
     int any_modified = 0;
     for (int i = 0; i < commit_count; i++)
     {
@@ -196,7 +196,7 @@ int cmd_status()
 
     /* 3. Untracked files */
     printf("\nUntracked files:\n");
-    printf("  (use \"git add <file>...\" to include in what will be committed)\n");
+    printf("  (use \"mgit add <file>...\" to include in what will be committed)\n");
     wt_count = 0;
     collect_files(".");
 

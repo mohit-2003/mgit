@@ -200,7 +200,7 @@ void print_index(void)
 }
 
 /**
- * @brief opens a git object file by its hash for binary reading
+ * @brief opens a mgit object file by its hash for binary reading
  *
  * builds the path as objects/xx/xxxxxx... where xx is the first two chars of the hash.
  *

@@ -18,6 +18,7 @@ static int unstage_all(void)
     /* Read all files from last commit */
     char (*commit_paths)[PATH_BUF] = malloc(MAX_FILES * PATH_BUF);
     char (*commit_hashes)[HASH_SIZE] = malloc(MAX_FILES * HASH_SIZE);
+    // Get the commit count
     int commit_count = read_last_commit(commit_paths, commit_hashes, MAX_FILES);
 
     /* Wipe the index */
