@@ -8,6 +8,56 @@
 #include "../include/index.h"
 #include "../include/mgit.h"
 
+// Helper function to check if staged index is different from last commit
+int has_staged_changes()
+{
+    char (*index_paths)[PATH_BUF] = malloc(MAX_FILES * PATH_BUF);
+    char (*index_hashes)[HASH_SIZE] = malloc(MAX_FILES * HASH_SIZE);
+    int index_count = read_index(index_paths, index_hashes, MAX_FILES);
+
+    char (*commit_paths)[PATH_BUF] = malloc(MAX_FILES * PATH_BUF);
+    char (*commit_hashes)[HASH_SIZE] = malloc(MAX_FILES * HASH_SIZE);
+    int commit_count = read_last_commit(commit_paths, commit_hashes, MAX_FILES);
+
+    int changed = 0;
+
+    if (index_count != commit_count)
+    {
+        changed = 1; // File count is different (added/deleted)
+    }
+    else
+    {
+        // Compare paths and hashes
+        for (int i = 0; i < index_count; i++)
+        {
+            int found = 0;
+            for (int j = 0; j < commit_count; j++)
+            {
+                if (strcmp(index_paths[i], commit_paths[j]) == 0)
+                {
+                    found = 1;
+                    if (strcmp(index_hashes[i], commit_hashes[j]) != 0)
+                    {
+                        changed = 1; // File modified
+                    }
+                    break;
+                }
+            }
+            if (!found)
+                changed = 1; // New file added
+            if (changed)
+                break;
+        }
+    }
+
+    free(index_paths);
+    free(index_hashes);
+    free(commit_paths);
+    free(commit_hashes);
+
+    return changed;
+}
+
 int cmd_commit(int argc, char *argv[])
 {
     const char *message = NULL;
@@ -25,6 +75,13 @@ int cmd_commit(int argc, char *argv[])
     if (index_is_empty())
     {
         printf("no changes added to commit (use \"mgit add\" and/or \"mgit commit\")\n");
+        return 0;
+    }
+
+    // Check if staged changes differ from last commit to avoid creating empty commits.
+    if (!has_staged_changes())
+    {
+        printf("nothing to commit, working tree clean\n");
         return 0;
     }
 
