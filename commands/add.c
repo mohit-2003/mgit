@@ -129,6 +129,7 @@ int cmd_add(int argc, char *argv[])
         }
 
         struct stat st;
+        // If the path doesn't exist, it might be a deletion. Check if it was tracked before and remove from index if so.
         if (stat(argv[i], &st) != 0)
         {
             char old_hash[HASH_SIZE];

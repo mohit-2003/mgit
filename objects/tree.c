@@ -15,6 +15,7 @@ int create_tree(char hash_output[HASH_SIZE])
     char (*index_hashes)[HASH_SIZE] = malloc(MAX_FILES * HASH_SIZE);
     int index_count = read_index(index_paths, index_hashes, MAX_FILES);
 
+    // Load files from the last commit to preserve unchanged files
     char (*commit_paths)[PATH_BUF] = malloc(MAX_FILES * PATH_BUF);
     char (*commit_hashes)[HASH_SIZE] = malloc(MAX_FILES * HASH_SIZE);
     int commit_count = read_last_commit(commit_paths, commit_hashes, MAX_FILES);

@@ -48,7 +48,7 @@ int extract_path_and_hash(char *line, char *path, char *hash)
 
     // Step 6: Copy exactly that many characters to get the path (spaces included!)
     strncpy(path, &line[start_pos], path_len);
-    path[path_len] = '\0'; // Always add the null terminator in C!
+    path[path_len] = '\0';
 
     return 1; // Success
 }
@@ -74,7 +74,6 @@ static int read_index_file(const char *filename, char paths[][PATH_BUF], char ha
     int count = 0;
     char line[PATH_BUF + HASH_SIZE];
 
-    // Read line by line using fgets (which reads spaces perfectly)
     while (count < max && fgets(line, sizeof(line), f))
     {
         if (extract_path_and_hash(line, paths[count], hashes[count]))
@@ -221,6 +220,7 @@ void rebuild_last_commit_index(void)
         return;
 
     char line[PATH_BUF + HASH_SIZE];
+    // if HEAD is empty, just leave last_index empty (no error)
     if (!fgets(line, sizeof(line), head))
     {
         fclose(head);
@@ -295,7 +295,7 @@ void rebuild_last_commit_index(void)
         return;
     }
 
-    // Read the tree entries line by line using our simple parser
+    // Read the tree entries line by line and write them to last_index in "filepath hash\n" format
     char p[PATH_BUF], h[HASH_SIZE];
     while (fgets(line, sizeof(line), tree_obj))
     {

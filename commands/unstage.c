@@ -72,14 +72,17 @@ int cmd_unstage(int argc, char *argv[])
     if (src)
     {
         char line[PATH_BUF + HASH_SIZE];
+        // Reading index line by line, parsing path and hash, and writing back all entries except the target to a temp file
         while (fgets(line, sizeof(line), src))
         {
             int len = strlen(line);
+            // Remove trailing newline if present
             if (len > 0 && line[len - 1] == '\n')
                 line[--len] = '\0';
             if (len < 42)
                 continue;
             strcpy(hash, &line[len - 40]);
+            // Handle optional "100644 " prefix in index entries. If present, skip it to get the path.
             int start = (strncmp(line, "100644 ", 7) == 0) ? 7 : 0;
             int plen = len - 41 - start;
             strncpy(path, &line[start], plen);

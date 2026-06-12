@@ -31,12 +31,14 @@ static int get_head_commit(char hash[HASH_SIZE])
     fclose(f);
     strip_newline(line);
 
+    // HEAD can be either a direct hash (detached) or a symbolic ref to a branch
     if (strncmp(line, "ref:", 4) == 0)
     {
         char ref_path[PATH_BUF];
         sscanf(line, "ref: %1023s", ref_path);
 
         FILE *ref = fopen(ref_path, "r");
+        // ref file might not exist if the branch exists but has no commits yet
         if (!ref)
             return 0;
 
@@ -49,7 +51,7 @@ static int get_head_commit(char hash[HASH_SIZE])
         fclose(ref);
 
         strip_newline(buf);
-        if (strlen(buf) == 40)
+        if (strlen(buf) == HASH_SIZE - 1)
         {
             strncpy(hash, buf, HASH_SIZE);
             return 1;
@@ -57,7 +59,8 @@ static int get_head_commit(char hash[HASH_SIZE])
         return 0;
     }
 
-    if (strlen(line) == 40)
+    // not a ref, should be a direct hash, detach HEAD state
+    if (strlen(line) == HASH_SIZE - 1)
     {
         strncpy(hash, line, HASH_SIZE);
         hash[HASH_SIZE - 1] = '\0';
@@ -121,6 +124,7 @@ static void print_commit(const char *hash)
             strftime(buf, sizeof(buf), "%a %b %d %H:%M:%S %Y", localtime(&t));
             printf("date   %s\n", buf);
         }
+        // empty line separates headers from message
         else if (line[0] == '\n')
         {
             printf("\n");

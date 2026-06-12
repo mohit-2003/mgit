@@ -52,7 +52,7 @@ static void collect_files(const char *base)
             strcmp(entry->d_name, "..") == 0)
             continue;
 
-        /* BUG FIX: EXACT MATCH: Skip the .mgit folder entirely */
+        /* Skip the .mgit folder entirely */
         if (strcmp(entry->d_name, ".mgit") == 0)
             continue;
 
@@ -76,7 +76,6 @@ static void collect_files(const char *base)
         }
         else if (is_regular_file(path))
         {
-            /* BUG FIX: Stop silently ignoring files if we hit the limit! */
             if (wt_count >= MAX_FILES)
             {
                 printf("fatal: repository exceeds maximum file limit of %d.\n", MAX_FILES);
